@@ -1,0 +1,33 @@
+!pip3 install -U ucimlrepo
+
+from ucimlrepo import fetch_ucirepo
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+
+
+# fetch dataset
+breast_cancer_wisconsin_diagnostic = fetch_ucirepo(id=17)
+
+# data (as pandas dataframes)
+X = breast_cancer_wisconsin_diagnostic.data.features
+y = breast_cancer_wisconsin_diagnostic.data.targets
+
+#remove null values
+X_clean = X.dropna() #remove missing values from row x
+y_clean = y.loc[X_clean.index] #align row y with row x
+X_clean = X_clean.drop_duplicates()
+y_clean = y_clean.loc[X_clean.index]
+
+#convert categorical values to numerical
+label_encoder = LabelEncoder()
+y_encode = label_encoder.fit_transform(y_clean)
+
+# metadata
+print(breast_cancer_wisconsin_diagnostic.metadata)
+
+# variable information
+print(breast_cancer_wisconsin_diagnostic.variables)
+
+#display clean data
+print("print 5 rows of X_cleaned\n", X_clean.head())
+print("first 5 rows or y encoded\n", y_encode[:5])
