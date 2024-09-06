@@ -28,6 +28,6 @@ print(breast_cancer_wisconsin_diagnostic.metadata)
 # variable information
 print(breast_cancer_wisconsin_diagnostic.variables)
 
-#display clean data
+#display first 5 rows of clean data
 print("print 5 rows of X_cleaned\n", X_clean.head())
 print("first 5 rows or y encoded\n", y_encode[:5])
