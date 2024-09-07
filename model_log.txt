@@ -1,0 +1,1 @@
+Hyperparameters: max_iter=1000, tol=1e-3, learning_rate=invscaling	 MSE: 0.06015785605190133, R-squared: 0.7475024633815004

@@ -42,15 +42,22 @@ def train(x_train, y_train):
 
 def evaluate(model, x_test, y_test):
     y_pred = model.predict(x_test)
+    mse = mean_squared_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
-    return r2
+    return r2, mse
+
+def log_results(params, mse, r2, log_file="model_log.txt"):
+    with open(log_file, 'w') as log_f:
+        log_f.write(f"Hyperparameters: {params}\t MSE: {mse}, R-squared: {r2}\n")
 
 def main():
     x_clean, y_encode = process_data()
     x_scaled = standardize(x_clean) 
     x_train, x_test, y_train, y_test = split(x_scaled, y_encode) 
     model = train(x_train, y_train)
-    r2 = evaluate(model, x_test, y_test)
+    r2, mse = evaluate(model, x_test, y_test)
+    log_results("max_iter=1000, tol=1e-3, learning_rate=invscaling", mse, r2 )
+
     print(r2)
 
 if __name__ == "__main__":
