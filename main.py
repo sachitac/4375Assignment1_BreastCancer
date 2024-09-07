@@ -32,32 +32,38 @@ def standardize(x_clean):
     return x_scaled
 
 def split(x_clean, y_encode):
-    x_train, x_test, y_train, y_test = train_test_split(x_clean, y_encode, random_state=104,  test_size=0.25,  shuffle=True) 
+    x_train, x_test, y_train, y_test = train_test_split(x_clean, y_encode, random_state=104,  test_size=0.2,  shuffle=True) 
     return x_train, x_test, y_train, y_test
 
 def train(x_train, y_train):
-    sgd_regressor = SGDRegressor(max_iter=1000, tol=1e-3, learning_rate="invscaling")
+    max_iter, tol, learning_rate = 5000,1e-3, "invscaling" #for logging purposes 
+    sgd_regressor = SGDRegressor(max_iter = 5000, tol = 1e-3, learning_rate="invscaling")
     sgd_regressor.fit(x_train, y_train)
-    return sgd_regressor
+    y_pred = sgd_regressor.predict(x_train)
+    mse = mean_squared_error(y_train, y_pred)
+    r2 = r2_score(y_train, y_pred)
+    return sgd_regressor, max_iter, tol, learning_rate, r2,mse
 
-def evaluate(model, x_test, y_test):
-    y_pred = model.predict(x_test)
-    mse = mean_squared_error(y_test, y_pred)
-    r2 = r2_score(y_test, y_pred)
-    return r2, mse
+
+#COMMENT BACK IN LATER to test model on tesitng data
+# def evaluate(model, x_test, y_test):
+#     y_pred = model.predict(x_test)
+#     mse = mean_squared_error(y_test, y_pred)
+#     r2 = r2_score(y_test, y_pred)
+#     return r2, mse
 
 def log_results(params, mse, r2, log_file="model_log.txt"):
-    with open(log_file, 'w') as log_f:
+    with open(log_file, 'a') as log_f:
         log_f.write(f"Hyperparameters: {params}\t MSE: {mse}, R-squared: {r2}\n")
 
 def main():
     x_clean, y_encode = process_data()
     x_scaled = standardize(x_clean) 
     x_train, x_test, y_train, y_test = split(x_scaled, y_encode) 
-    model = train(x_train, y_train)
-    r2, mse = evaluate(model, x_test, y_test)
-    log_results("max_iter=1000, tol=1e-3, learning_rate=invscaling", mse, r2 )
-
+    model, max_iter, tol, learning_rate, r2, mse = train(x_train, y_train)
+    #COMMENT BACK IN LATER to test model on tesitng data
+    #r2, mse = evaluate(model, x_test, y_test)
+    log_results(f"max_iter={max_iter}, tol={tol}, learning_rate={learning_rate}", mse, r2)
     print(r2)
 
 if __name__ == "__main__":
