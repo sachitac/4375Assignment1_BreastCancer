@@ -1,9 +1,10 @@
 from ucimlrepo import fetch_ucirepo
-import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import SGDRegressor
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, explained_variance_score, mean_absolute_error, max_error, classification_report
+import seaborn as sns
+import matplotlib.pyplot as plt
 import itertools
 
 def process_data():
@@ -29,7 +30,7 @@ def standardize(x_clean):
 
 # 80/20 training/test split
 def split(x_clean, y_encode):
-    return train_test_split(x_clean, y_encode, random_state=104, test_size=0.2, shuffle=True)
+    return train_test_split(x_clean, y_encode, random_state=104, test_size=0.3, shuffle=True)
 
 # trains data using SGDRegressor, with different iterations, tolerances, and learning rates
 def train(x_train, y_train, max_iter, tol, learning_rate):
@@ -61,8 +62,7 @@ def hyperparameter_tuning(x_train, y_train):
         if mse < best_mse:  
             best_mse = mse
             best_model = model
-    print(best_mse)
-    return best_model
+    return best_model, best_model.coef_
 
 # appends results to end of file
 def log_results(params, mse, r2, log_file="model_log.txt"):
@@ -74,17 +74,44 @@ def evaluate(model, x_test, y_test):
     y_pred = model.predict(x_test)
     mse = mean_squared_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
-    return r2, mse
+    explained_variance = explained_variance_score(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
+    max_err = max_error(y_test, y_pred)
+    return r2, mse, explained_variance, mae, max_err, y_test, y_pred
+
+def plot_correlation_heatmap(data):
+    corr = data.corr()
+    sns.heatmap(corr, annot=True, cmap='coolwarm', fmt='.2f')
+    plt.title('Correlation Heatmap')
+    plt.show()
+
+def plot_feature_vs_target(feature, target):
+    plt.scatter(feature, target, alpha=0.5)
+    plt.xlabel('Feature Value')
+    plt.ylabel('Target Variable')
+    plt.title('Feature vs. Target')
+    plt.show()
+
 
 def main():
     x_clean, y_encode = process_data()
     x_scaled = standardize(x_clean)
     x_train, x_test, y_train, y_test = split(x_scaled, y_encode)
 
-    model = hyperparameter_tuning(x_train, y_train)
-    r2, mse = evaluate(model, x_test, y_test)
+    model, model_coefs = hyperparameter_tuning(x_train, y_train)
+    r2, mse, explained_variance, mae, max_error, y_test, y_pred = evaluate(model, x_test, y_test)
 
-    print(r2, mse)
+    
+    print(classification_report(y_test, (y_pred > 0.5).astype(int)))
+
+    feature_names = x_clean.columns
+
+    for name, weight in zip(feature_names, model_coefs):
+        print(f"{name}: {weight}")
+
+    print(f"R2 value: {r2}, MSE value: {mse}, Explained variance score: {explained_variance}, MAE value: {mae}, Max error: {max_error}")
+    plot_correlation_heatmap(x_clean)
+    plot_feature_vs_target(x_clean.radius1, y_encode)
 
 
 if __name__ == "__main__":
