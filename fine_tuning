@@ -1,0 +1,82 @@
+from ucimlrepo import fetch_ucirepo
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import SGDRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+import itertools
+
+def process_data():
+    # fetch dataset
+    breast_cancer_wisconsin_diagnostic = fetch_ucirepo(id=17)
+    x = breast_cancer_wisconsin_diagnostic.data.features
+    y = breast_cancer_wisconsin_diagnostic.data.targets
+
+    # Clean and preprocess data
+    x_clean = x.dropna()
+    y_clean = y.loc[x_clean.index]
+    x_clean = x_clean.drop_duplicates()
+    y_clean = y_clean.loc[x_clean.index]
+
+    # Encode target variable
+    label_encoder = LabelEncoder()
+    y_encode = label_encoder.fit_transform(y_clean.values.ravel())
+    return x_clean, y_encode
+
+def standardize(x_clean):
+    scaler = StandardScaler()
+    return scaler.fit_transform(x_clean)
+
+def split(x_clean, y_encode):
+    return train_test_split(x_clean, y_encode, random_state=104, test_size=0.2, shuffle=True)
+
+def train(x_train, y_train, max_iter, tol, learning_rate):
+    sgd_regressor = SGDRegressor(max_iter=max_iter, tol=tol, learning_rate=learning_rate)
+    sgd_regressor.fit(x_train, y_train)
+    y_pred = sgd_regressor.predict(x_train)
+    mse = mean_squared_error(y_train, y_pred)
+    r2 = r2_score(y_train, y_pred)
+    return sgd_regressor, r2, mse
+
+def log_results(params, mse, r2, log_file="model_log.txt"):
+    with open(log_file, 'a') as log_f:
+        log_f.write(f"Hyperparameters: {params}\t MSE: {mse}, R-squared: {r2}\n")
+
+def hyperparameter_tuning(x_train, y_train):
+    # Define ranges for hyperparameters
+    max_iter_values = [1000, 3000, 5000]
+    tol_values = [1e-4, 1e-3, 1e-2]
+    learning_rate_values = ['constant', 'optimal', 'invscaling']
+
+    # Get all combinations of the hyperparameters
+    param_combinations = itertools.product(max_iter_values, tol_values, learning_rate_values)
+
+    best_r2 = float('-inf')
+    best_params = None
+
+    # Iterate through all combinations and log results
+    for max_iter, tol, learning_rate in param_combinations:
+        model, r2, mse = train(x_train, y_train, max_iter, tol, learning_rate)
+        params = f"max_iter={max_iter}, tol={tol}, learning_rate={learning_rate}"
+        log_results(params, mse, r2)
+        print(f"Tested {params}: MSE={mse}, R2={r2}")
+        
+        if r2 > best_r2:  # Find the best R2 value
+            best_r2 = r2
+            best_params = params
+
+    return best_params, best_r2
+
+def main():
+    # Data preprocessing
+    x_clean, y_encode = process_data()
+    x_scaled = standardize(x_clean)
+    x_train, x_test, y_train, y_test = split(x_scaled, y_encode)
+
+    # Hyperparameter tuning
+    best_params, best_r2 = hyperparameter_tuning(x_train, y_train)
+    
+    print(f"Best Hyperparameters: {best_params} with R-squared: {best_r2}")
+
+if __name__ == "__main__":
+    main()
