@@ -1,6 +1,6 @@
 # Report File
 
-I am satisfied with my solution because it yielded an r^2 value of 0.75 which is indicative of a strong relationship between the independent (the features) and the dependent variable
+I am satisfied with my solution because it yielded an r^2 value of 0.75 which is indicative of a strong relationship between the independent variables (the features) and the dependent variables
 (the targets). The r^2 value also captures a significant variability which implies the model has a good predictive ability and fits the data well. Furthermore the mse value 
 produced was 0.057 which is a good value for a binary classification.  But because this is a binary classification the linear regression is not the best way to calculate the regression, 
 but given our linear model's results, I am satisfied with our program.
