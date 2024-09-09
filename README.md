@@ -1,6 +1,6 @@
 # 4375Assignment1_BreastCancer
 Anjana Bharadwaj (axb200114) and Sachita Chaliki (sxc200091)
-Find correct weights of a dataset using gradient descent
+This program fetches the Breast Cancer Wisconsin dataset, preprocesses the data, trains an SGDRegressor model, and tunes its hyperparameters to maximize the R-squared value, logging the results for each trial.
 
 To run: 
 1. Open a virtual environment
